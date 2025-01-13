@@ -1,4 +1,4 @@
-use deadpool_postgres::{Manager, Pool};
+use deadpool_postgres::Pool;
 
 pub async fn setup(pool: Pool) {
 
@@ -17,4 +17,6 @@ pub async fn setup(pool: Pool) {
         create table if not exists public.file_tags (id serial not null constraint file_tags_pk primary key, file_id varchar(36) not null constraint file_tags_file_id_fk references public.file, tag_value integer constraint file_tags_file_tags_id_fk references public.file_tags);
     ").await;
     
+    
+
 }
