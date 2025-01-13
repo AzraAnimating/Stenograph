@@ -9,6 +9,8 @@ use tokio_postgres::NoTls;
 mod structs;
 mod controller;
 mod database;
+mod schema;
+mod models;
 
 #[tokio::main]
 async fn main() {
@@ -25,20 +27,7 @@ async fn main() {
 
     let config = Arc::new(toml::from_str::<Configuration>(&config_str).expect("Failed to parse Config!"));
 
-
-    let mut database_config = Config::new(); 
-    database_config.dbname = Some(config.database.database.clone());
-    database_config.user = Some(config.database.username.clone()); 
-    database_config.password = Some(config.database.password.clone());
-    database_config.host = Some(config.database.hostname.clone()); 
-    database_config.port = Some(config.database.port);
-    database_config.manager = Some(ManagerConfig  {
-        recycling_method: deadpool_postgres::RecyclingMethod::Fast
-    });
-
-    let pool = database_config.create_pool(Some(deadpool_postgres::Runtime::Tokio1), NoTls).expect("Failed to open Pool");
-
-    database::data::setup(pool.clone()).await;
+    let database_connection = database::data::connect(config.database.clone());
 
     let app = Router::new()
         .route("/", get(|| async { "Hello World!" }))

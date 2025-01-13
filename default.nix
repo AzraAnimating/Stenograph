@@ -8,5 +8,7 @@
       openssl
       pkg-config
       rust-analyzer
+      libpqxx
+      postgresql
     ];
 }
