@@ -2,5 +2,5 @@
 username = "fsr_stenograph"
 password = "NHfkXpmS838fSxRHNwaiSucHJ5dJ2wTP"
 database = "fsr_stenograph"
-hostname = "10.150.42.164"
+hostname = "10.150.42.165"
 port = 5432
