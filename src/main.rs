@@ -39,6 +39,8 @@ async fn main() {
     let pool = database_config.create_pool(Some(deadpool_postgres::Runtime::Tokio1), NoTls).expect("Failed to open Pool");
 
     database::data::setup(pool.clone()).await;
+    let _ = database::data::create_tag(pool, "michael".to_string()).await.unwrap();
+
 
     let app = Router::new()
         .route("/", get(|| async { "Hello World!" }))
