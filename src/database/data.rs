@@ -56,7 +56,7 @@ pub async fn add_file(pool: Pool, file_name: String, filetype: i32) -> Result<St
     Ok(uuid)
 }
 
-pub async fn add_file_tag(pool: Pool, file_id: String, tag_value_id: i32) -> Result<(), String> {
+pub async fn add_file_tag(pool: Pool, file_id: String, tag_value_id: i32) -> Result<i32, String> {
     let client = get_client!(pool);
 
     let _ = match client.execute("insert into file_tags (file_id, tag_value_id) values ($1::TEXT, $2::INT);", &[&file_id, &tag_value_id]).await {
@@ -66,7 +66,18 @@ pub async fn add_file_tag(pool: Pool, file_id: String, tag_value_id: i32) -> Res
         },
     };
 
-    Ok(())
+    let potential_rows = match client.query("select id from tag_values where file_id = $1::TEXT AND tag_value_id = $2::INT;", &[&file_id, &tag_value_id]).await {
+        Ok(file) => file,
+        Err(err) => {
+            return Err(err.to_string());
+        },
+    };
+
+    if potential_rows.is_empty() {
+        return Err("No such tag value!".to_string());
+    }
+
+    Ok(potential_rows[0].get(0))
 }
 
 
@@ -104,6 +115,7 @@ pub async fn create_tag(pool: Pool, tag_name: String) -> Result<i32, String> {
 
     Ok(potential_rows[0].get(0))
 }
+
 
 pub async fn create_tag_value(pool: Pool, tag_id: i32, value: String) -> Result<i32, String> {
     let client = get_client!(pool);

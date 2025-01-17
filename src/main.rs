@@ -8,6 +8,7 @@ use tokio_postgres::NoTls;
 
 mod structs;
 mod controller;
+mod services;
 mod database;
 
 #[tokio::main]
@@ -39,11 +40,6 @@ async fn main() {
     let pool = database_config.create_pool(Some(deadpool_postgres::Runtime::Tokio1), NoTls).expect("Failed to open Pool");
 
     database::data::setup(pool.clone()).await;
-
-    let bre = database::data::create_tag(pool.clone(), "meh".to_string()).await.unwrap();
-    let brub = database::data::create_tag_value(pool.clone(), bre, "masdasd".to_string()).await.unwrap();
-    let _ = database::data::add_file_tag(pool, "bf4a1485-3d3b-40a2-a559-561754e8ada1".to_string(), brub).await;
-
 
 
     let app = Router::new()
