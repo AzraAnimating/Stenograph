@@ -1,5 +1,4 @@
 use deadpool_postgres::{GenericClient, Pool};
-use tokio_postgres::row;
 use uuid::Uuid;
 use crate::get_client;
 
@@ -16,7 +15,7 @@ pub async fn setup(pool: Pool) {
         create table if not exists public.tag (id serial not null constraint tag_pk primary key, name varchar(128) not null);
         create table if not exists public.tag_values (id serial constraint tag_values_pk primary key, tag_id integer constraint tag_values_tag_id_fk references public.tag, value varchar(128) not null);
         create table if not exists public.file (id varchar(36) not null constraint files_pk primary key, name varchar(128) not null, datatype integer not null);
-        create table if not exists public.file_tags (id serial not null constraint file_tags_pk primary key, file_id varchar(36) not null constraint file_tags_file_id_fk references public.file, tag_value integer constraint file_tags_file_tags_id_fk references public.file_tags);
+        create table if not exists public.file_tags (id serial not null constraint file_tags_pk primary key, file_id varchar(36) not null constraint file_tags_file_id_fk references public.file, tag_value_id integer constraint file_tags_file_tags_id_fk references public.file_tags);
     ").await;
 }
 
@@ -57,6 +56,19 @@ pub async fn add_file(pool: Pool, file_name: String, filetype: i32) -> Result<St
     Ok(uuid)
 }
 
+pub async fn add_file_tag(pool: Pool, file_id: String, tag_value_id: i32) -> Result<(), String> {
+    let client = get_client!(pool);
+
+    let _ = match client.execute("insert into file_tags (file_id, tag_value_id) values ($1::TEXT, $2::INT);", &[&file_id, &tag_value_id]).await {
+        Ok(_) => {},
+        Err(err) => {
+            return Err(err.to_string())
+        },
+    };
+
+    Ok(())
+}
+
 
 pub async fn create_tag(pool: Pool, tag_name: String) -> Result<i32, String> {
     let client = get_client!(pool);
@@ -92,6 +104,32 @@ pub async fn create_tag(pool: Pool, tag_name: String) -> Result<i32, String> {
 
     Ok(potential_rows[0].get(0))
 }
+
+pub async fn create_tag_value(pool: Pool, tag_id: i32, value: String) -> Result<i32, String> {
+    let client = get_client!(pool);
+
+    let _ = match client.execute("insert into tag_values (tag_id, value) values ($1::INT, $2::TEXT);", &[&tag_id, &value]).await {
+        Ok(_) => {},
+        Err(err) => {
+            return Err(err.to_string());
+        },
+    };
+
+
+    let potential_rows = match client.query("select id from tag_values where value = $1::TEXT AND tag_id = $2::INT;", &[&value, &tag_id]).await {
+        Ok(file) => file,
+        Err(err) => {
+            return Err(err.to_string());
+        },
+    };
+
+    if potential_rows.is_empty() {
+        return Err("No such tag!".to_string());
+    }
+
+    Ok(potential_rows[0].get(0))
+}
+
 
 
 #[macro_export]
