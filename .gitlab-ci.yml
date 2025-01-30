@@ -5,8 +5,6 @@ stages:
 build: 
   stage: rust_build
   image: rust:bookworm
-  before_script: 
-    - apt -y install openssl
   script: 
     - cargo build --release
   artifacts: 
