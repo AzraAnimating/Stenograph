@@ -2,6 +2,7 @@ use std::{fs, sync::Arc};
 
 use axum::{routing::get, Router};
 use deadpool_postgres::{Config, ManagerConfig};
+use storage::database;
 use structs::configuration::Configuration;
 use tokio::net::TcpListener;
 use tokio_postgres::NoTls;
@@ -9,7 +10,7 @@ use tokio_postgres::NoTls;
 mod structs;
 mod controller;
 mod services;
-mod database;
+mod storage;
 
 #[tokio::main]
 async fn main() {
@@ -39,7 +40,7 @@ async fn main() {
 
     let pool = database_config.create_pool(Some(deadpool_postgres::Runtime::Tokio1), NoTls).expect("Failed to open Pool");
 
-    database::data::setup(pool.clone()).await;
+    database::setup(pool.clone()).await;
 
 
     let app = Router::new()
