@@ -1,9 +1,10 @@
 use std::{fs, sync::Arc};
 
 use axum::{routing::get, Router};
+use controller::tag;
 use deadpool_postgres::{Config, ManagerConfig};
 use storage::database;
-use structs::configuration::Configuration;
+use structs::{configuration::Configuration, state::AppState};
 use tokio::net::TcpListener;
 use tokio_postgres::NoTls;
 
@@ -42,9 +43,12 @@ async fn main() {
 
     database::setup(pool.clone()).await;
 
+    let state = AppState { database: pool };
 
     let app = Router::new()
         .route("/", get(|| async { "Hello World!" }))
+        .route("/tags", get(tag::get_tags))
+        .with_state(state)
     ;
 
     let listener = TcpListener::bind("0.0.0.0:8080").await.expect("Failed to bind!");
