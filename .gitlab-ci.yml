@@ -11,16 +11,3 @@ build:
     paths: 
       - target/release/stenograph_api
     expire_in: 12 hours
-
-docker-build: 
-  stage: docker_build  
-  image: docker:24.0.5
-  services:
-    - docker:24.0.5-dind
-  tags: 
-    - docker
-  before_script: 
-    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
-  script: 
-    - docker build -t registry.fsi.rub.de/fsr/projects/stenograph/api:latest .
-    - docker push registry.fsi.rub.de/fsr/projects/stenograph/api:latest
