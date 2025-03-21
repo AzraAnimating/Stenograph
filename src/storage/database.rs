@@ -1,6 +1,8 @@
+use std::vec;
+
 use deadpool_postgres::{GenericClient, Pool};
 use uuid::Uuid;
-use crate::get_client;
+use crate::{get_client, structs::tag::NamedTag};
 
 pub async fn setup(pool: Pool) {
 
@@ -140,6 +142,34 @@ pub async fn create_tag_value(pool: Pool, tag_id: i32, value: String) -> Result<
     }
 
     Ok(potential_rows[0].get(0))
+}
+
+pub async fn get_all_tags(pool: Pool) -> Result<Vec<NamedTag>, String> {
+    let client = get_client!(pool);
+
+    let potential_rows = match client.query("select tag.id, tag_values.id, tag_values.value from tag join tag_values on tag.id = tag_values.tag_id;", &[]).await {
+        Ok(rows) => rows,
+        Err(err) => {
+            return Err(err.to_string())
+        },
+    };
+
+    if potential_rows.is_empty() {
+        return Err("No tags!".to_string());
+    }
+
+    let mut tags: Vec<NamedTag> = vec![];
+
+    for row in potential_rows {
+        
+        let id: i32 = row.get(0);
+        let value_id: i32 = row.get(1);
+        let value: String = row.get(2);
+
+        tags.push(NamedTag { id, value_id, value })
+    }
+
+    Ok(tags)
 }
 
 

@@ -1,7 +1,8 @@
-use axum::{extract::{Request, State}, response::IntoResponse};
+use axum::{extract::State, http::StatusCode};
 
 use crate::structs::state::AppState;
 
-pub fn get_tags(request: Request, State(state): State<AppState>) {
-
+pub async fn get_tags(State(state): State<AppState>) ->Result<String, StatusCode> {
+    
+    Ok("".to_string())
 }
