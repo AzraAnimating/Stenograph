@@ -9,6 +9,7 @@ pub struct Tag {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NamedTag {
     pub id: i32, 
+    pub name: String,
     pub value_id: i32, 
     pub value: String
 }

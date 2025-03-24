@@ -1,6 +1,6 @@
 use std::vec;
 
-use deadpool_postgres::{GenericClient, Pool};
+use deadpool_postgres::{GenericClient, Manager, Object, Pool};
 use uuid::Uuid;
 use crate::{get_client, structs::tag::NamedTag};
 
@@ -58,8 +58,7 @@ pub async fn add_file(pool: Pool, file_name: String, filetype: i32) -> Result<St
     Ok(uuid)
 }
 
-pub async fn add_file_tag(pool: Pool, file_id: String, tag_value_id: i32) -> Result<i32, String> {
-    let client = get_client!(pool);
+pub async fn add_file_tag(client: Object, file_id: String, tag_value_id: i32) -> Result<i32, String> {
 
     let _ = match client.execute("insert into file_tags (file_id, tag_value_id) values ($1::TEXT, $2::INT);", &[&file_id, &tag_value_id]).await {
         Ok(_) => {},
@@ -83,8 +82,7 @@ pub async fn add_file_tag(pool: Pool, file_id: String, tag_value_id: i32) -> Res
 }
 
 
-pub async fn create_tag(pool: Pool, tag_name: String) -> Result<i32, String> {
-    let client = get_client!(pool);
+pub async fn create_tag(client: Object, tag_name: String) -> Result<i32, String> {
 
     let potential_rows = match client.query("select id from tag where name = $1::TEXT;", &[&tag_name]).await {
         Ok(file) => file,
@@ -119,8 +117,7 @@ pub async fn create_tag(pool: Pool, tag_name: String) -> Result<i32, String> {
 }
 
 
-pub async fn create_tag_value(pool: Pool, tag_id: i32, value: String) -> Result<i32, String> {
-    let client = get_client!(pool);
+pub async fn create_tag_value(client: Object, tag_id: i32, value: String) -> Result<i32, String> {
 
     let _ = match client.execute("insert into tag_values (tag_id, value) values ($1::INT, $2::TEXT);", &[&tag_id, &value]).await {
         Ok(_) => {},
@@ -145,9 +142,10 @@ pub async fn create_tag_value(pool: Pool, tag_id: i32, value: String) -> Result<
 }
 
 pub async fn get_all_tags(pool: Pool) -> Result<Vec<NamedTag>, String> {
+
     let client = get_client!(pool);
 
-    let potential_rows = match client.query("select tag.id, tag_values.id, tag_values.value from tag join tag_values on tag.id = tag_values.tag_id;", &[]).await {
+    let potential_rows = match client.query("select tag.id, tag.name, tag_values.id, tag_values.value from tag join tag_values on tag.id = tag_values.tag_id;", &[]).await {
         Ok(rows) => rows,
         Err(err) => {
             return Err(err.to_string())
@@ -163,10 +161,11 @@ pub async fn get_all_tags(pool: Pool) -> Result<Vec<NamedTag>, String> {
     for row in potential_rows {
         
         let id: i32 = row.get(0);
-        let value_id: i32 = row.get(1);
-        let value: String = row.get(2);
+        let name: String = row.get(1);
+        let value_id: i32 = row.get(2);
+        let value: String = row.get(3);
 
-        tags.push(NamedTag { id, value_id, value })
+        tags.push(NamedTag { id, name, value_id, value })
     }
 
     Ok(tags)
