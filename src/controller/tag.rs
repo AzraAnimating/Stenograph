@@ -15,6 +15,3 @@ pub async fn get_tags(State(state): State<AppState>) ->Result<Json<Vec<NamedTag>
     Ok(Json(tags))
 }
 
-pub async fn add_tag(mut request: Request<Body>, State(state): State<AppState>) {
-
-}

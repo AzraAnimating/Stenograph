@@ -1,7 +1,7 @@
 use std::{fs, sync::Arc};
 
-use axum::{routing::get, Router};
-use controller::tag;
+use axum::{routing::{get, post}, Router};
+use controller::{file, tag};
 use deadpool_postgres::{Config, ManagerConfig};
 use storage::database;
 use structs::{configuration::Configuration, state::AppState};
@@ -48,6 +48,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(|| async { "Hello World!" }))
         .route("/tags", get(tag::get_tags))
+        .route("/submit/pdf", post(file::submit_pdf))
         .with_state(state)
     ;
 
