@@ -21,7 +21,7 @@ pub async fn setup(pool: Pool) {
     ").await;
 }
 
-pub async fn add_file(pool: Pool, file_name: String, filetype: i32) -> Result<String, String> {
+pub async fn add_file(pool: &Pool, file_name: String, filetype: i32) -> Result<String, String> {
     let client = get_client!(pool);
 
     let mut uuid = Uuid::new_v4().to_string();

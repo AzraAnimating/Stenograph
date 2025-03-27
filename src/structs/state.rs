@@ -1,6 +1,4 @@
-
-use deadpool_postgres::{Manager, Object, Pool, PoolError};
-
+use deadpool_postgres::{Object, Pool, PoolError};
 
 #[derive(Clone)]
 pub struct AppState {

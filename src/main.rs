@@ -26,6 +26,8 @@ async fn main() {
         }
     };
 
+    fs::create_dir_all("files").expect("Failed to create files directory");
+
     let config = Arc::new(toml::from_str::<Configuration>(&config_str).expect("Failed to parse Config!"));
 
 
