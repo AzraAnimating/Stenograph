@@ -30,7 +30,6 @@ async fn main() {
 
     let config = Arc::new(toml::from_str::<Configuration>(&config_str).expect("Failed to parse Config!"));
 
-
     let mut database_config = Config::new(); 
     database_config.dbname = Some(config.database.database.clone());
     database_config.user = Some(config.database.username.clone()); 
@@ -47,6 +46,8 @@ async fn main() {
 
     let state = AppState { database: pool };
 
+    
+
     let app = Router::new()
         .route("/", get(|| async { "Hello World!" }))
         .route("/tags", get(tag::get_tags))
@@ -54,6 +55,7 @@ async fn main() {
         .route("/tags/create/value", post(tag::create_tag_value))
         .route("/submit/pdf", post(file::submit_pdf))
         .route("/retrieve/pdf", get(file::retrieve_pdf))
+
         .with_state(state)
     ;
 
