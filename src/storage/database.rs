@@ -1,8 +1,8 @@
-use std::vec;
+use std::{collections::HashMap, usize, vec};
 
 use deadpool_postgres::{GenericClient, Manager, Object, Pool};
 use uuid::Uuid;
-use crate::{get_client, structs::tag::NamedValueTag};
+use crate::{get_client, structs::tag::{NamedTag, NamedTagValue, NamedValueTag}};
 
 pub async fn setup(pool: Pool) {
 
@@ -58,7 +58,9 @@ pub async fn add_file(pool: &Pool, file_name: String, filetype: i32) -> Result<S
     Ok(uuid)
 }
 
-pub async fn add_file_tag(client: Object, file_id: String, tag_value_id: i32) -> Result<i32, String> {
+pub async fn add_file_tag(pool: &Pool, file_id: &str, tag_value_id: i32) -> Result<i32, String> {
+
+    let client = get_client!(pool);
 
     let _ = match client.execute("insert into file_tags (file_id, tag_value_id) values ($1::TEXT, $2::INT);", &[&file_id, &tag_value_id]).await {
         Ok(_) => {},
@@ -145,7 +147,7 @@ pub async fn create_tag_value(pool: &Pool, tag_id: i32, value: &str) -> Result<i
     Ok(potential_rows[0].get(0))
 }
 
-pub async fn get_all_tags(pool: Pool) -> Result<Vec<NamedValueTag>, String> {
+pub async fn get_all_tags(pool: &Pool) -> Result<Vec<NamedTag>, String> {
 
     let client = get_client!(pool);
 
@@ -160,19 +162,37 @@ pub async fn get_all_tags(pool: Pool) -> Result<Vec<NamedValueTag>, String> {
         return Err("No tags!".to_string());
     }
 
-    let mut tags: Vec<NamedValueTag> = vec![];
+    let mut tags_map: HashMap<i32, NamedTag> = HashMap::default();
 
     for row in potential_rows {
         
         let id: i32 = row.get(0);
         let name: String = row.get(1);
         let value_id: i32 = row.get(2);
-        let value: String = row.get(3);
+        let value: String = row.get(3);        
 
-        tags.push(NamedValueTag { id, name, value_id, value })
+        match tags_map.get_mut(&id) {
+            Some(tag) => {
+                tag.values.push(NamedTagValue { id: value_id, value })
+            },
+            None => {
+                tags_map.insert(id.clone(), NamedTag { id, name, values: vec![NamedTagValue { id: value_id, value }] });
+            },
+        }
+
+    }
+
+    let mut tags: Vec<NamedTag> = vec![];
+
+    for (_, tag) in tags_map {
+        tags.push(tag);
     }
 
     Ok(tags)
+}
+
+pub async fn get_files_with_tag(pool: &Pool) {
+
 }
 
 

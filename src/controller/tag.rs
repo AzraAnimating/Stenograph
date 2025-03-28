@@ -1,10 +1,10 @@
 use axum::{body::Body, extract::State, http::{Request, StatusCode}, response::IntoResponse, Json};
 
-use crate::{generate_response, storage::database, structs::{state::AppState, tag::{CreateTag, CreateTagValue, NamedValueTag}}};
+use crate::{generate_response, storage::database, structs::{state::AppState, tag::{CreateTag, CreateTagValue, NamedTag, NamedValueTag}}};
 
-pub async fn get_tags(State(state): State<AppState>) -> Result<Json<Vec<NamedValueTag>>, StatusCode> {
+pub async fn get_tags(State(state): State<AppState>) -> Result<Json<Vec<NamedTag>>, StatusCode> {
 
-    let tags = match database::get_all_tags(state.database.clone()).await {
+    let tags = match database::get_all_tags(&state.database).await {
         Ok(tags) => tags,
         Err(err) => {
             println!("Failed to fetch Tags!: {:?}", err);
@@ -43,7 +43,6 @@ pub async fn create_tag(State(state): State<AppState>, Json(create_tag): Json<Cr
         }
 
     }
-
     return generate_response!(StatusCode::OK, "Success!")
 
 }

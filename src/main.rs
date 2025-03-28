@@ -53,6 +53,7 @@ async fn main() {
         .route("/tags/create", post(tag::create_tag))
         .route("/tags/create/value", post(tag::create_tag_value))
         .route("/submit/pdf", post(file::submit_pdf))
+        .route("/retrieve/pdf", get(file::retrieve_pdf))
         .with_state(state)
     ;
 
