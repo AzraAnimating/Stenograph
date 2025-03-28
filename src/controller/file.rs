@@ -3,7 +3,7 @@ use std::{fs::File, io::Write};
 
 use axum::{body::{Body, Bytes}, extract::{Multipart, State}, http::{Response, StatusCode}, response::IntoResponse};
 
-use crate::{storage::database, structs::state::AppState};
+use crate::{generate_response, storage::database, structs::state::AppState};
 
 pub async fn submit_pdf(State(state): State<AppState>, mut multipart: Multipart) -> impl IntoResponse {
 
@@ -38,7 +38,7 @@ pub async fn submit_pdf(State(state): State<AppState>, mut multipart: Multipart)
                 Ok(name) => Some(name.to_owned()),
                 Err(err) => {
                     return Response::builder()
-                        .status(StatusCode::INTERNAL_SERVER_ERROR)
+                        .status(StatusCode::INTERNAL_SERVER_ERROR) 
                         .body(Body::from(err.to_string()))
                         .expect("Failed to statically generate response");
                 },
@@ -60,19 +60,13 @@ pub async fn submit_pdf(State(state): State<AppState>, mut multipart: Multipart)
     }
 
     if data.is_none() || file_name.is_none() {
-        return Response::builder()
-            .status(StatusCode::BAD_REQUEST)
-            .body(Body::from("Missing Parameter name or upload"))
-            .expect("Failed to statically generate response");
+        return generate_response!(StatusCode::BAD_REQUEST, "Missing Parameter name or upload!");
     }
 
     let id = match database::add_file(&state.database, file_name.expect("Failed to get validated Value"), 1).await {
         Ok(id) => id,
         Err(err) => {
-            return Response::builder()
-                .status(StatusCode::BAD_REQUEST)
-                .body(Body::from(err))
-                .expect("Failed to statically generate response");
+            return generate_response!(StatusCode::INTERNAL_SERVER_ERROR, err);
         },
     };
 
@@ -81,19 +75,11 @@ pub async fn submit_pdf(State(state): State<AppState>, mut multipart: Multipart)
     let mut file = match File::create(format!("files/{}.pdf", id)) {
         Ok(file) => file,
         Err(err) => {
-            println!("{:?}", err); 
-            return Response::builder()
-                .status(StatusCode::OK)
-                .body(Body::from("meh"))
-                .expect("Failed to statically generate response");
+            return generate_response!(StatusCode::INTERNAL_SERVER_ERROR, err.to_string());
         },
     };
 
     let _ = file.write(&data.expect("Failed to fetch validated files"));
     
-    Response::builder()
-        .status(StatusCode::OK)
-        .body(Body::from("meh"))
-        .expect("Failed to statically generate response")
-
+    generate_response!(StatusCode::OK, "Success!")
 }

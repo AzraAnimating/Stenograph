@@ -50,6 +50,8 @@ async fn main() {
     let app = Router::new()
         .route("/", get(|| async { "Hello World!" }))
         .route("/tags", get(tag::get_tags))
+        .route("/tags/create", post(tag::create_tag))
+        .route("/tags/create/value", post(tag::create_tag_value))
         .route("/submit/pdf", post(file::submit_pdf))
         .with_state(state)
     ;

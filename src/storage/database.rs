@@ -2,7 +2,7 @@ use std::vec;
 
 use deadpool_postgres::{GenericClient, Manager, Object, Pool};
 use uuid::Uuid;
-use crate::{get_client, structs::tag::NamedTag};
+use crate::{get_client, structs::tag::NamedValueTag};
 
 pub async fn setup(pool: Pool) {
 
@@ -82,7 +82,9 @@ pub async fn add_file_tag(client: Object, file_id: String, tag_value_id: i32) ->
 }
 
 
-pub async fn create_tag(client: Object, tag_name: String) -> Result<i32, String> {
+pub async fn create_tag(pool: &Pool, tag_name: String) -> Result<i32, String> {
+
+    let client = get_client!(pool);
 
     let potential_rows = match client.query("select id from tag where name = $1::TEXT;", &[&tag_name]).await {
         Ok(file) => file,
@@ -117,7 +119,9 @@ pub async fn create_tag(client: Object, tag_name: String) -> Result<i32, String>
 }
 
 
-pub async fn create_tag_value(client: Object, tag_id: i32, value: String) -> Result<i32, String> {
+pub async fn create_tag_value(pool: &Pool, tag_id: i32, value: &str) -> Result<i32, String> {
+
+    let client = get_client!(pool);
 
     let _ = match client.execute("insert into tag_values (tag_id, value) values ($1::INT, $2::TEXT);", &[&tag_id, &value]).await {
         Ok(_) => {},
@@ -141,7 +145,7 @@ pub async fn create_tag_value(client: Object, tag_id: i32, value: String) -> Res
     Ok(potential_rows[0].get(0))
 }
 
-pub async fn get_all_tags(pool: Pool) -> Result<Vec<NamedTag>, String> {
+pub async fn get_all_tags(pool: Pool) -> Result<Vec<NamedValueTag>, String> {
 
     let client = get_client!(pool);
 
@@ -156,7 +160,7 @@ pub async fn get_all_tags(pool: Pool) -> Result<Vec<NamedTag>, String> {
         return Err("No tags!".to_string());
     }
 
-    let mut tags: Vec<NamedTag> = vec![];
+    let mut tags: Vec<NamedValueTag> = vec![];
 
     for row in potential_rows {
         
@@ -165,7 +169,7 @@ pub async fn get_all_tags(pool: Pool) -> Result<Vec<NamedTag>, String> {
         let value_id: i32 = row.get(2);
         let value: String = row.get(3);
 
-        tags.push(NamedTag { id, name, value_id, value })
+        tags.push(NamedValueTag { id, name, value_id, value })
     }
 
     Ok(tags)
