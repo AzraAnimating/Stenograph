@@ -4,3 +4,6 @@ password = "NHfkXpmS838fSxRHNwaiSucHJ5dJ2wTP"
 database = "fsr_stenograph"
 hostname = "10.150.42.165"
 port = 5432
+
+[server]
+bind_addr = "0.0.0.0:8080"

@@ -179,7 +179,6 @@ pub async fn get_all_tags(pool: &Pool) -> Result<Vec<NamedTag>, String> {
                 tags_map.insert(id.clone(), NamedTag { id, name, values: vec![NamedTagValue { id: value_id, value }] });
             },
         }
-
     }
 
     let mut tags: Vec<NamedTag> = vec![];
@@ -191,8 +190,8 @@ pub async fn get_all_tags(pool: &Pool) -> Result<Vec<NamedTag>, String> {
     Ok(tags)
 }
 
-pub async fn get_files_with_tag(pool: &Pool) {
-
+pub async fn get_files_with_tag(pool: &Pool, tags: Vec<i32>) {
+    
 }
 
 
@@ -208,3 +207,8 @@ macro_rules! get_client {
       }
     };
 }
+
+
+
+
+

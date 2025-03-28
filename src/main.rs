@@ -57,6 +57,6 @@ async fn main() {
         .with_state(state)
     ;
 
-    let listener = TcpListener::bind("0.0.0.0:8080").await.expect("Failed to bind!");
+    let listener = TcpListener::bind(&config.server.bind_addr).await.expect("Failed to bind!");
     axum::serve(listener, app).await.expect("Failed to start Server!");
 }
